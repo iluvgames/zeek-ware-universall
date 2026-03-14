@@ -1,2 +1,16 @@
 # zeek-ware-universall
-A premium, modern Menu for roblox  that can compare to other scripts but... its keyless and free!
+
+Zenith.OS web desktop prototype with a **working browser window** and switchable browser profiles:
+
+- DuckDuckGo
+- Brave
+- Opera
+- LibreWolf
+
+## Run locally
+
+```bash
+python3 -m http.server 4173
+```
+
+Then open `http://localhost:4173/index.html`.

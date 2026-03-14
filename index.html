@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Zenith.OS</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Cantarell:wght@400;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.9/babel.min.js"></script>
+  <style>
+    * { box-sizing: border-box; }
+    html, body, #root { margin: 0; height: 100%; font-family: "Cantarell", sans-serif; }
+    .desktop {
+      height: 100%;
+      background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+      color: #e0e4e8;
+      display: flex;
+      flex-direction: column;
+    }
+    .topbar {
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 12px;
+      backdrop-filter: blur(12px);
+      background: rgba(20, 20, 28, 0.75);
+      border-bottom: 1px solid rgba(255,255,255,.1);
+      font-size: 13px;
+    }
+    .main {
+      display: grid;
+      place-items: center;
+      flex: 1;
+      padding: 20px;
+    }
+    .window {
+      width: min(95vw, 1040px);
+      height: min(82vh, 680px);
+      border-radius: 12px;
+      overflow: hidden;
+      border: 1px solid rgba(255,255,255,.12);
+      background: rgba(30,30,42,.95);
+      box-shadow: 0 16px 50px rgba(0,0,0,.4);
+      display: flex;
+      flex-direction: column;
+    }
+    .window-header {
+      height: 42px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 0 12px;
+      border-bottom: 1px solid rgba(255,255,255,.1);
+      background: rgba(18,18,25,.85);
+    }
+    .traffic {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+    }
+    .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px;
+      padding: 10px;
+      border-bottom: 1px solid rgba(255,255,255,.08);
+      background: rgba(24,24,34,.8);
+    }
+    select, input, button {
+      height: 34px;
+      border-radius: 8px;
+      border: 1px solid rgba(255,255,255,.15);
+      background: rgba(255,255,255,.06);
+      color: #e0e4e8;
+      padding: 0 10px;
+      font-family: inherit;
+    }
+    input { flex: 1; min-width: 220px; }
+    button { cursor: pointer; background: #7b68ee; border: none; font-weight: 700; }
+    button.secondary { background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.18); }
+    .hint {
+      font-size: 12px;
+      color: #9ba4b6;
+      padding: 8px 10px;
+      border-bottom: 1px solid rgba(255,255,255,.06);
+      font-family: "JetBrains Mono", monospace;
+    }
+    iframe { flex: 1; width: 100%; border: 0; background: #fff; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  <script type="text/babel">
+    const { useMemo, useState } = React;
+
+    const BROWSERS = {
+      duckduckgo: {
+        label: "DuckDuckGo",
+        homepage: "https://duckduckgo.com/",
+        search: (q) => `https://duckduckgo.com/?q=${encodeURIComponent(q)}`,
+        note: "Private-search default profile."
+      },
+      brave: {
+        label: "Brave",
+        homepage: "https://search.brave.com/",
+        search: (q) => `https://search.brave.com/search?q=${encodeURIComponent(q)}`,
+        note: "Brave search profile."
+      },
+      opera: {
+        label: "Opera",
+        homepage: "https://www.opera.com/",
+        search: (q) => `https://www.opera.com/search?q=${encodeURIComponent(q)}`,
+        note: "Opera web profile."
+      },
+      librewolf: {
+        label: "LibreWolf",
+        homepage: "https://librewolf.net/",
+        search: (q) => `https://duckduckgo.com/?q=${encodeURIComponent(q)}`,
+        note: "LibreWolf profile with DuckDuckGo default."
+      }
+    };
+
+    function normalizeUrl(value) {
+      const v = value.trim();
+      if (!v) return "";
+      if (/^https?:\/\//i.test(v)) return v;
+      if (v.includes(".") && !v.includes(" ")) return `https://${v}`;
+      return "";
+    }
+
+    function ZenithOS() {
+      const [profile, setProfile] = useState("duckduckgo");
+      const [input, setInput] = useState("");
+      const [url, setUrl] = useState(BROWSERS.duckduckgo.homepage);
+      const [status, setStatus] = useState("Ready");
+
+      const engine = useMemo(() => BROWSERS[profile], [profile]);
+
+      const navigate = () => {
+        const direct = normalizeUrl(input);
+        if (direct) {
+          setUrl(direct);
+          setStatus(`Opened URL in ${engine.label} profile.`);
+          return;
+        }
+        if (input.trim()) {
+          setUrl(engine.search(input));
+          setStatus(`Searched for \"${input.trim()}\" via ${engine.label}.`);
+        }
+      };
+
+      const openExternal = () => {
+        window.open(url, "_blank", "noopener,noreferrer");
+      };
+
+      return (
+        <div className="desktop">
+          <div className="topbar">
+            <strong>Zenith.OS</strong>
+            <span>{new Date().toLocaleTimeString()}</span>
+          </div>
+
+          <div className="main">
+            <div className="window">
+              <div className="window-header">
+                <span className="traffic" style={{ background: "#ff5f57" }} />
+                <span className="traffic" style={{ background: "#febc2e" }} />
+                <span className="traffic" style={{ background: "#28c840" }} />
+                <strong style={{ marginLeft: 8 }}>Zenith Browser</strong>
+              </div>
+
+              <div className="toolbar">
+                <select
+                  value={profile}
+                  onChange={(e) => {
+                    const next = e.target.value;
+                    setProfile(next);
+                    setUrl(BROWSERS[next].homepage);
+                    setStatus(`Switched to ${BROWSERS[next].label}.`);
+                  }}
+                >
+                  <option value="duckduckgo">DuckDuckGo</option>
+                  <option value="brave">Brave</option>
+                  <option value="opera">Opera</option>
+                  <option value="librewolf">LibreWolf</option>
+                </select>
+
+                <input
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && navigate()}
+                  placeholder="Search or enter URL"
+                />
+
+                <button onClick={navigate}>Go</button>
+                <button className="secondary" onClick={() => setUrl(engine.homepage)}>Home</button>
+                <button className="secondary" onClick={openExternal}>Open in tab</button>
+              </div>
+
+              <div className="hint">
+                {engine.note} • {status}
+              </div>
+
+              <iframe title="Zenith Browser" src={url} />
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    ReactDOM.render(<ZenithOS />, document.getElementById("root"));
+  </script>
+</body>
+</html>
